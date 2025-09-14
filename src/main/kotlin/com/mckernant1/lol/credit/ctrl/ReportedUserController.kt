@@ -18,8 +18,10 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
+import software.amazon.awssdk.enhanced.dynamodb.internal.mapper.AtomicCounter
 import java.time.Instant
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicInteger
 
 
 @RestController
@@ -46,15 +48,29 @@ class ReportedUserController(
 
         val reportsByRole = reports.groupBy { it.role }
 
-        val positiveReportsByRole = reportsByRole
-            .mapValues { (_, reports) ->
-                reports.flatMap { it.positiveAttributes }.groupingBy { it }.eachCount()
+        val positiveReportsByRole: Map<Report.Role, MutableMap<Report.PositiveAttributes, Int>> =
+            Report.Role.entries.associateWith {
+                Report.PositiveAttributes.entries.associateWith { 0 }.toMutableMap()
             }
 
-        val negativeReportsByRole = reportsByRole
-            .mapValues { (_, reports) ->
-                reports.flatMap { it.negativeAttributes }.groupingBy { it }.eachCount()
+        val negativeReportsByRole: Map<Report.Role, MutableMap<Report.NegativeAttributes, Int>> =
+            Report.Role.entries.associateWith {
+                Report.NegativeAttributes.entries.associateWith { 0 }.toMutableMap()
             }
+
+        for (report in reports) {
+            val posInner = positiveReportsByRole[report.role]!!
+            val negInner = negativeReportsByRole[report.role]!!
+
+            for (att in report.positiveAttributes) {
+                posInner[att] = posInner[att]!! + 1
+            }
+
+            for (att in report.negativeAttributes) {
+                negInner[att] = negInner[att]!! + 1
+            }
+
+        }
 
         return ReportsOnUserResponse(
             positiveReportsByRole,
@@ -121,11 +137,17 @@ class ReportedUserController(
             ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Report not found")
 
         if (riotId != oldReport.reportedUserRiotId) {
-            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "RiotId $riotId does not match id of existing report")
+            throw ResponseStatusException(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "RiotId $riotId does not match id of existing report"
+            )
         }
 
         if (auth.name != oldReport.reporterUserGoogleId) {
-            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Auth id does not match google id of existing report")
+            throw ResponseStatusException(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Auth id does not match google id of existing report"
+            )
         }
 
         oldReport.positiveAttributes = putReport.positiveAttributes
