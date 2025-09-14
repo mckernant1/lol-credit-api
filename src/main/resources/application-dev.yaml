@@ -1,0 +1,5 @@
+credit:
+  aws:
+    dynamodb:
+      reports:
+        tableName: reports-dev
