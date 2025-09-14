@@ -12,7 +12,9 @@ class SecurityConfig {
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .authorizeHttpRequests { auth ->
-                auth.anyRequest().authenticated()
+                auth
+                    .requestMatchers("/api/info/**","/actuator/health", "/actuator/info").permitAll()
+                    .anyRequest().authenticated()
             }
             .oauth2Login { oauth -> oauth.defaultSuccessUrl("/me", true) }
             .logout { logout -> logout.logoutSuccessUrl("/") }

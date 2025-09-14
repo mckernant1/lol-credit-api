@@ -11,7 +11,6 @@ class UserEntity(
     @get:DynamoDbPartitionKey
     var userId: String? = null,
 
-    @get:DynamoDbConvertedBy(InstantAsStringAttributeConverter::class)
     var accountCreatedTimestamp: Instant? = null,
 
     var preferredSearchDays: Int? = null

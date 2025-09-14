@@ -15,21 +15,18 @@ open class ReportEntity(
     @get:DynamoDbPartitionKey
     var reportId: String? = null,
 
-    @get:DynamoDbSecondaryPartitionKey([REPORTED_USER_INDEX])
+    @get:DynamoDbSecondaryPartitionKey(indexNames = [REPORTED_USER_INDEX])
     var reportedUserRiotId: String? = null,
 
-    @get:DynamoDbSecondaryPartitionKey([REPORTER_USER_INDEX])
+    @get:DynamoDbSecondaryPartitionKey(indexNames = [REPORTER_USER_INDEX])
     var reporterUserGoogleId: String? = null,
 
-    @get:DynamoDbSecondarySortKey([REPORTER_USER_INDEX, REPORTED_USER_INDEX])
-    @get:DynamoDbConvertedBy(InstantAsStringAttributeConverter::class)
+    @get:DynamoDbSecondarySortKey(indexNames = [REPORTER_USER_INDEX, REPORTED_USER_INDEX])
     var gameTimestamp: Instant? = null,
 
     var role: Report.Role? = null,
     var champion: String? = null,
-    @get:DynamoDbConvertedBy(InstantAsStringAttributeConverter::class)
     var createdTimestamp: Instant? = null,
-    @get:DynamoDbConvertedBy(InstantAsStringAttributeConverter::class)
     var updatedTimestamp: Instant? = null,
     var negativeAttributes: List<Report.NegativeAttributes>? = emptyList(),
     var positiveAttributes: List<Report.PositiveAttributes>? = emptyList()
@@ -86,11 +83,11 @@ data class Report(
         Top,
         Jungle,
         Mid,
-        Bot,
+        Bottom,
         Support
     }
 
-    enum class NegativeAttributes(description: String) {
+    enum class NegativeAttributes(val description: String) {
         YAPPER("Talks too much"),
         RACISM("Racism or slurs"),
 
@@ -106,7 +103,7 @@ data class Report(
 
     }
 
-    enum class PositiveAttributes(description: String) {
+    enum class PositiveAttributes(val description: String) {
         POSITIVE_VIBES("Contributes to chat positively"),
         SILENT_HERO("Ignored toxic chat messages to still perform well"),
 

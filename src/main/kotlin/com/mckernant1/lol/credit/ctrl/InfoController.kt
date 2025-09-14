@@ -2,21 +2,23 @@ package com.mckernant1.lol.credit.ctrl
 
 import com.mckernant1.lol.credit.db.models.Report
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
-@RestController("/api/info")
+@RestController
+@RequestMapping("/api/info")
 class InfoController {
 
     data class GetReportTypes(
-        val positiveAttributes: List<Report.PositiveAttributes>,
-        val negativeAttributes: List<Report.NegativeAttributes>,
+        val positiveAttributes: Map<String, String>,
+        val negativeAttributes: Map<String, String>,
     )
 
     @GetMapping("/attributes")
     fun getReportTypes(): GetReportTypes {
         return GetReportTypes(
-            Report.PositiveAttributes.entries,
-            Report.NegativeAttributes.entries
+            Report.PositiveAttributes.entries.associate { it.name to it.description },
+            Report.NegativeAttributes.entries.associate { it.name to it.description },
         )
     }
 
